@@ -5,7 +5,6 @@ applications:
   memory: 256M
   host: backlog-pal-san
   path: Applications/BacklogServer/bin/Release/netcoreapp2.0/publish
-  env:
-    REGISTRATION_SERVER_ENDPOINT: http://registration-pal-san.apps.pikes.pal.pivotal.io
   services:
   - tracker-backlog-database
+  - tracker-service-registry
