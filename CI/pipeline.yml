@@ -127,4 +127,4 @@ jobs:
     params:
       manifest: timesheets-artifacts/manifest-timesheets.yml
       path: timesheets-artifacts
-      current_app_name: tracker-timesheets
+      current_app_name: tracker-timesheets 
