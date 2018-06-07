@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Backlog
 {
-    [Route("stories"), Produces("application/json")]
     [Authorize(Policy = "pal-tracker")]
+    [Route("stories"), Produces("application/json")]
     public class StoryController : Controller
     {
         private readonly IStoryDataGateway _gateway;

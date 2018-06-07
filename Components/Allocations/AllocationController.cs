@@ -6,8 +6,8 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Allocations
 {
-    [Route("allocations"), Produces("application/json")]
     [Authorize(Policy = "pal-tracker")]
+    [Route("allocations"), Produces("application/json")]
     public class AllocationController : Controller
     {
         private readonly IAllocationDataGateway _gateway;

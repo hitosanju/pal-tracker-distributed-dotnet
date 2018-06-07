@@ -5,8 +5,8 @@ using Users;
 
 namespace Accounts
 {
-    [Route("registration"), Produces("application/json")]
     [Authorize(Policy = "pal-tracker")]
+    [Route("registration"), Produces("application/json")]
     public class RegisationController : Controller
     {
         private readonly IRegistrationService _service;

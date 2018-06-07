@@ -5,8 +5,8 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Accounts
 {
-    [Route("accounts"), Produces("application/json")]
     [Authorize(Policy = "pal-tracker")]
+    [Route("accounts"), Produces("application/json")]
     public class AccountController : Controller
     {
         private readonly IAccountDataGateway _gateway;

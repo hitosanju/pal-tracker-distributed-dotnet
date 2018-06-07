@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Timesheets
 {
-    [Route("time-entries"), Produces("application/json")]
     [Authorize(Policy = "pal-tracker")]
+    [Route("time-entries"), Produces("application/json")]
     public class TimeEntryController : Controller
     {
         private readonly ITimeEntryDataGateway _gateway;

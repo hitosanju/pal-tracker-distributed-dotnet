@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace DefaultRoute
 {
-    [Route("")]
     [Authorize(Policy = "pal-tracker")]
+    [Route("")]
     public class DefaultController : Controller
     {
         [HttpGet]
