@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Net.Http;
 using Allocations;
+using AuthDisabler;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -66,11 +68,11 @@ namespace AllocationsServer
         {
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
+            app.UseAuthentication();
+            app.UseMvc();
             app.UseDiscoveryClient();
             app.UseHystrixMetricsStream();
             app.UseHystrixRequestContext();
-            app.UseAuthentication();
-            app.UseMvc();
         }
     }
 }
