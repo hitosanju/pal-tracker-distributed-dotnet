@@ -10,3 +10,6 @@ applications:
   - tracker-service-registry
   - tracker-circuit-breaker-dashboard
   - tracker-amqp
+  - tracker-sso
+  env:
+    GRANT_TYPE: client_credentials  
