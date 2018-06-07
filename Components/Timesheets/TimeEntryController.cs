@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Timesheets
 {
     [Route("time-entries"), Produces("application/json")]
+    [Authorize(Policy = "pal-tracker")]
     public class TimeEntryController : Controller
     {
         private readonly ITimeEntryDataGateway _gateway;

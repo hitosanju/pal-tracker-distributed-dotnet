@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Net.Http;
+using Allocations;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Steeltoe.CloudFoundry.Connector.MySql.EFCore;
-using Timesheets;
 using Pivotal.Discovery.Client;
 using Steeltoe.Common.Discovery;
 using Steeltoe.CircuitBreaker.Hystrix;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Steeltoe.Security.Authentication.CloudFoundry;
+using Microsoft.AspNetCore.Authentication;
 
 
 namespace TimesheetsServer
@@ -28,10 +31,12 @@ namespace TimesheetsServer
         {
             // Add framework services.
             services.AddMvc();
+
+            services.AddDbContext<AllocationContext>(options => options.UseMySql(Configuration));
+            services.AddScoped<IAllocationDataGateway, AllocationDataGateway>();
             services.AddDiscoveryClient(Configuration);
-            services.AddDbContext<TimeEntryContext>(options => options.UseMySql(Configuration));
-            services.AddScoped<ITimeEntryDataGateway, TimeEntryDataGateway>();
-            
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
             services.AddSingleton<IProjectClient>(sp =>
             {
                 var handler = new DiscoveryHttpClientHandler(sp.GetService<IDiscoveryClient>());
@@ -39,11 +44,23 @@ namespace TimesheetsServer
                 {
                     BaseAddress = new Uri(Configuration.GetValue<string>("REGISTRATION_SERVER_ENDPOINT"))
                 };
-
                 var logger = sp.GetService<ILogger<ProjectClient>>();
-                return new ProjectClient(httpClient, logger);
+                return new ProjectClient(
+                     httpClient, logger,
+                    () => contextAccessor.HttpContext.GetTokenAsync("access_token")
+                    );
               });
+
+
+            if (Configuration.GetValue("DISABLE_AUTH", false))
+            {
+                services.DisableClaimsVerification();
+            }
             services.AddHystrixMetricsStream(Configuration);
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                    .AddCloudFoundryJwtBearer(Configuration);
+            services.AddAuthorization(options =>
+                 options.AddPolicy("pal-tracker", policy => policy.RequireClaim("scope", "uaa.resource")));    
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -54,6 +71,7 @@ namespace TimesheetsServer
             app.UseDiscoveryClient();
             app.UseHystrixMetricsStream();
             app.UseHystrixRequestContext();
+            app.UseAuthentication();
             app.UseMvc();
         }
     }

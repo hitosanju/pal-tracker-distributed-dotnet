@@ -10,6 +10,9 @@ using Steeltoe.CloudFoundry.Connector.MySql.EFCore;
 using Pivotal.Discovery.Client;
 using Steeltoe.Common.Discovery;
 using Steeltoe.CircuitBreaker.Hystrix;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Steeltoe.Security.Authentication.CloudFoundry;
+using Microsoft.AspNetCore.Authentication;
 
 namespace AllocationsServer
 {
@@ -31,6 +34,7 @@ namespace AllocationsServer
             services.AddDbContext<AllocationContext>(options => options.UseMySql(Configuration));
             services.AddScoped<IAllocationDataGateway, AllocationDataGateway>();
             services.AddDiscoveryClient(Configuration);
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddSingleton<IProjectClient>(sp =>
             {
                 var handler = new DiscoveryHttpClientHandler(sp.GetService<IDiscoveryClient>());
@@ -39,9 +43,22 @@ namespace AllocationsServer
                     BaseAddress = new Uri(Configuration.GetValue<string>("REGISTRATION_SERVER_ENDPOINT"))
                 };
                 var logger = sp.GetService<ILogger<ProjectClient>>();
-                return new ProjectClient(httpClient, logger);
+                var contextAccessor = sp.GetService<IHttpContextAccessor>();
+                return new ProjectClient(
+                     httpClient, logger,
+                    () => contextAccessor.HttpContext.GetTokenAsync("access_token")
+                    );
               });
+
+            if (Configuration.GetValue("DISABLE_AUTH", false))
+            {
+                services.DisableClaimsVerification();
+            }
             services.AddHystrixMetricsStream(Configuration);
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                    .AddCloudFoundryJwtBearer(Configuration);
+            services.AddAuthorization(options =>
+                 options.AddPolicy("pal-tracker", policy => policy.RequireClaim("scope", "uaa.resource")));    
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -52,6 +69,7 @@ namespace AllocationsServer
             app.UseDiscoveryClient();
             app.UseHystrixMetricsStream();
             app.UseHystrixRequestContext();
+            app.UseAuthentication();
             app.UseMvc();
         }
     }
